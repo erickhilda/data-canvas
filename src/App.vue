@@ -1,89 +1,78 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/core";
-import { Button, FloatLabel, InputText, Select } from "primevue";
+import { computed, ref } from "vue";
+import { IconField, InputIcon, InputText } from "primevue";
+import ManageConnectionModal from "./features/manage-connection-modal.vue";
+import { useDbStore } from "./store/db-store";
 
-const dbType = ref("sqlite");
-const dbTypeOptions = [
-  { name: "SQLite", value: "sqlite" },
-  { name: "PostgreSQL", value: "postgres" },
-];
-const dbName = ref("my_database");
-const dbUrl = ref("");
-const dbPath = ref("");
-const connected = ref(false);
-const tables = ref([]);
+const searchQuery = ref("");
+const dbStore = useDbStore();
 
-async function connectDB() {
-  try {
-    const pathOrUrl = dbType.value === "postgres" ? dbUrl.value : dbPath.value;
-    await invoke("connect_database", {
-      dbType: dbType.value,
-      name: dbName.value,
-      pathOrUrl,
-    });
-    connected.value = true;
-    fetchTables();
-  } catch (error) {
-    console.error("Connection error:", error);
-  }
-}
-
-async function fetchTables() {
-  try {
-    tables.value = await invoke("list_tables", {
-      dbType: dbType.value,
-      name: dbName.value,
-    });
-  } catch (error) {
-    console.error("Error fetching tables:", error);
-  }
-}
+const activeConnection = computed(() => dbStore.activeConnection);
+const tables = computed(() => dbStore.tables);
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 p-6">
-    <h1>Database Manager</h1>
+  <div class="h-screen">
+    <div class="flex h-full">
+      <!-- Sidebar -->
+      <div class="w-64 border-r border-zinc-700 flex flex-col">
+        <!-- manage connection toolbar -->
+        <div
+          class="flex items-center justify-between pl-4 border-b border-zinc-700"
+        >
+          <div class="flex items-center gap-2 truncate">
+            <span class="text-sm">{{ activeConnection.name }}</span>
+          </div>
 
-    <div class="flex flex-col gap-4">
-      <FloatLabel class="w-full md:w-56" variant="on">
-        <Select
-          v-model="dbType"
-          :options="dbTypeOptions"
-          option-label="name"
-          option-value="value"
-          placeholder="Select Database Type"
-          class="w-full md:w-56"
-          inputId="database_type"
-        />
-        <label for="database_type">Database Type</label>
-      </FloatLabel>
+          <ManageConnectionModal />
+        </div>
 
-      <FloatLabel variant="on">
-        <label for="database_name">Database Name</label>
-        <InputText id="database_name" v-model="dbName" />
-      </FloatLabel>
+        <div
+          class="p-4 text-gray-400 text-sm flex flex-col justify-between gap-2"
+        >
+          <IconField>
+            <InputIcon class="pi pi-search" />
+            <InputText
+              size="small"
+              v-model="searchQuery"
+              placeholder="Search..."
+              block
+            />
+          </IconField>
 
-      <FloatLabel variant="on" v-if="dbType === 'postgres'">
-        <label for="database_url">PostgreSQL URL:</label>
-        <InputText id="database_url" v-model="dbUrl" />
-      </FloatLabel>
+          <div class="flex justify-between items-center">
+            <span>public</span>
+            <span class="bg-zinc-800 px-2 rounded-full text-xs">0</span>
+          </div>
+        </div>
 
-      <FloatLabel variant="on" v-if="dbType === 'sqlite'">
-        <label for="database_path">SQLite file path</label>
-        <InputText id="database_path" v-model="dbPath" />
-      </FloatLabel>
+        <div class="px-4 flex-1 border-b border-zinc-700">
+          <div
+            v-for="table in tables"
+            :key="table"
+            class="p-2 text-xs flex gap-2 items-center hover:bg-zinc-600 rounded cursor-pointer"
+          >
+            <i class="pi pi-table text-emerald-500"></i>
+            <span>{{ table }}</span>
+          </div>
+        </div>
 
-      <Button @click="connectDB">Connect</Button>
-    </div>
+        <!-- Query Section -->
+        <div class="mt-auto">
+          <div class="px-4 py-2">Query</div>
+          <div
+            class="px-4 py-2 flex items-center gap-2 hover:bg-zinc-800 cursor-pointer"
+          >
+            <i class="pi pi-code"></i>
+            <span>SQL Query</span>
+          </div>
+        </div>
+      </div>
 
-    <div v-if="connected">
-      <h2>Tables</h2>
-      <button @click="fetchTables">Refresh Tables</button>
-      <!-- <ul> -->
-      <!--   <li v-for="table in tables" :key="table">{{ table }}</li> -->
-      <!-- </ul> -->
-      <pre>{{ JSON.stringify(tables, null, 2) }}</pre>
+      <!-- Content Area -->
+      <div class="flex-1">
+        <!-- Content goes here -->
+      </div>
     </div>
   </div>
 </template>
