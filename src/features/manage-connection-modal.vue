@@ -42,7 +42,7 @@ const connection = computed(() => dbStore.connection);
     <Dialog
       v-model:visible="isModalManageConnectionOpen"
       modal
-      header="Edit Profile"
+      header="Manage Connection"
       :style="{ width: '36rem' }"
       :pt="{
         header: '!py-0 px-2 text-base border-b border-zinc-700',

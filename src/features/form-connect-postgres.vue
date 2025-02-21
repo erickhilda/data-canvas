@@ -56,7 +56,7 @@ async function connectToDatabase() {
       port: +initialValues.port,
     });
 
-    const tables = (await invoke("list_table_postgres", {
+    const tables = (await invoke("list_tables_postgres", {
       name: initialValues.name,
     })) as Array<string>;
 
@@ -125,7 +125,7 @@ const onFormSubmit = async (e: FormSubmitEvent) => {
     </div>
     <div class="flex justify-between">
       <Button
-        type="submit"
+        type="button"
         severity="secondary"
         size="small"
         label="Test"
