@@ -36,6 +36,7 @@ const connection = computed(() => dbStore.connection);
   <div class="card flex justify-center">
     <Button
       icon="pi pi-database"
+      size="small"
       text
       @click="isModalManageConnectionOpen = !isModalManageConnectionOpen"
     />
@@ -45,10 +46,10 @@ const connection = computed(() => dbStore.connection);
       header="Manage Connection"
       :style="{ width: '36rem' }"
       :pt="{
-        header: '!py-0 px-2 text-base border-b border-zinc-700',
-        pcCloseButton: '!p-2',
-        content: '!p-0 !overflow-hidden',
-        title: '!text-base !font-semibold',
+        pcCloseButton: {
+          icon: '',
+          size: 'small',
+        },
       }"
     >
       <div class="flex px-3 w-full">

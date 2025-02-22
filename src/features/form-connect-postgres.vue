@@ -48,35 +48,42 @@ async function testConnection() {
 }
 const dbStore = useDbStore();
 
-async function connectToDatabase() {
+const isConnecting = ref(false);
+async function connectToDatabase(payload: typeof initialValues) {
   try {
-    let response;
-    response = await invoke("connect_postgres", {
-      ...initialValues,
-      port: +initialValues.port,
+    isConnecting.value = true;
+    await invoke("connect_postgres", {
+      ...payload,
+      port: +payload.port,
     });
 
-    const tables = (await invoke("list_tables_postgres", {
-      name: initialValues.name,
-    })) as Array<string>;
+    const schemas = await invoke("get_schemas_postgres", {
+      name: payload.name,
+    });
+    const tables = await invoke("list_tables_postgres", {
+      name: payload.name,
+    });
 
-    dbStore.setConnection(initialValues.name, {
-      ...initialValues,
+    dbStore.setConnection(payload.name, {
+      ...payload,
       type: "postgres",
     });
-    dbStore.setActiveConnection({ ...initialValues, type: "postgres" });
+    dbStore.setActiveConnection({ ...payload, type: "postgres" });
+    dbStore.setSchemas(schemas);
     dbStore.setTables(tables);
 
     emit("connected");
   } catch (error) {
     message.value = `Connection failed: ${error}`;
     messageType.value = "error";
+  } finally {
+    isConnecting.value = false;
   }
 }
 
 const onFormSubmit = async (e: FormSubmitEvent) => {
   if (e.valid) {
-    await connectToDatabase();
+    await connectToDatabase(e.values);
   }
 };
 </script>
@@ -129,10 +136,16 @@ const onFormSubmit = async (e: FormSubmitEvent) => {
         severity="secondary"
         size="small"
         label="Test"
+        :disabled="isConnecting"
         @click="testConnection"
       />
 
-      <Button type="submit" label="Connect" size="small" />
+      <Button
+        type="submit"
+        label="Connect"
+        size="small"
+        :loading="isConnecting"
+      />
     </div>
   </Form>
 </template>

@@ -1,5 +1,7 @@
 use crate::modules::database::DatabaseManager;
+use serde::Serialize;
 use sqlx::Row;
+use tauri::State;
 
 #[tauri::command]
 pub async fn test_connection_postgres(
@@ -19,16 +21,23 @@ pub async fn test_connection_postgres(
     }
 }
 
+#[derive(Serialize)]
+pub struct ConnectionResponse {
+    name: String,
+    message: String,
+    url: String,
+}
+
 #[tauri::command]
 pub async fn connect_postgres(
-    state: tauri::State<'_, DatabaseManager>,
+    state: State<'_, DatabaseManager>,
     name: String,
     host: String,
     port: u16,
     username: String,
     password: String,
     database_name: String,
-) -> Result<String, String> {
+) -> Result<ConnectionResponse, String> {
     let url = format!(
         "postgres://{}:{}@{}:{}/{}",
         username, password, host, port, database_name
@@ -36,15 +45,56 @@ pub async fn connect_postgres(
     match sqlx::PgPool::connect(&url).await {
         Ok(pool) => {
             state.postgres_pools.lock().await.insert(name.clone(), pool);
-            Ok(format!("Connected to PostgreSQL: {}", name))
+            Ok(ConnectionResponse {
+                name,
+                message: "Successfully connected to PostgreSQL".to_string(),
+                url,
+            })
         }
         Err(e) => Err(format!("Failed to connect to PostgreSQL: {}", e)),
     }
 }
 
 #[tauri::command]
+pub async fn get_schemas_postgres(
+    state: State<'_, DatabaseManager>,
+    name: String,
+) -> Result<Vec<String>, String> {
+    let pools = state.postgres_pools.lock().await;
+    let pool = pools.get(&name).ok_or("Database connection not found")?;
+
+    let query = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name != 'information_schema'";
+    match sqlx::query(query).fetch_all(pool).await {
+        Ok(rows) => {
+            let schemas: Vec<String> = rows.iter().map(|row| row.get(0)).collect();
+            Ok(schemas)
+        }
+        Err(e) => Err(format!("Failed to get schemas: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub async fn get_tables_by_schema_postgres(
+    state: State<'_, DatabaseManager>,
+    name: String,
+    schema: String,
+) -> Result<Vec<String>, String> {
+    let pools = state.postgres_pools.lock().await;
+    let pool = pools.get(&name).ok_or("Database connection not found")?;
+
+    let query = "SELECT table_name FROM information_schema.tables WHERE table_schema = $1";
+    match sqlx::query(query).bind(&schema).fetch_all(pool).await {
+        Ok(rows) => {
+            let tables: Vec<String> = rows.iter().map(|row| row.get(0)).collect();
+            Ok(tables)
+        }
+        Err(e) => Err(format!("Failed to get tables for schema {}: {}", schema, e)),
+    }
+}
+
+#[tauri::command]
 pub async fn list_tables_postgres(
-    state: tauri::State<'_, DatabaseManager>,
+    state: State<'_, DatabaseManager>,
     name: String,
 ) -> Result<Vec<String>, String> {
     let pools = state.postgres_pools.lock().await;
