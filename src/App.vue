@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import Sidebar from "./features/sidebar.vue";
+import AppSidebar from "@/components/app/app-sidebar.vue";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import AppCanvas from "@/components/app/app-canvas.vue";
 </script>
 
 <template>
-  <div class="h-screen">
-    <div class="flex h-full">
-      <Sidebar />
-      <!-- Content Area -->
-      <div class="flex-1">
-        <!-- Content goes here -->
-      </div>
-    </div>
-  </div>
+  <SidebarProvider>
+    <AppSidebar />
+    <SidebarInset>
+      <header class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+        <SidebarTrigger />
+      </header>
+
+      <AppCanvas />
+    </SidebarInset>
+  </SidebarProvider>
 </template>
