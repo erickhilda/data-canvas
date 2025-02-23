@@ -5,6 +5,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import AppCanvas from "@/components/app/app-canvas.vue";
 </script>
 
 <template>
@@ -14,6 +15,8 @@ import {
       <header class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
         <SidebarTrigger />
       </header>
+
+      <AppCanvas />
     </SidebarInset>
   </SidebarProvider>
 </template>
