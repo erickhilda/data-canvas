@@ -3,7 +3,6 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -13,10 +12,9 @@ import {
 } from "@/components/ui/sidebar";
 import {
   IconCalendar,
-  IconChevronDown,
+  IconSelector,
   IconHome,
   IconInbox,
-  IconPlus,
   IconSearch,
   IconSettings,
 } from "@tabler/icons-vue";
@@ -25,7 +23,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+} from "../ui/dropdown-menu";
+import { Separator } from "../ui/separator";
+import DialogManageConnection from "./dialog-manage-connection.vue";
 
 // Menu items.
 const items = [
@@ -59,35 +59,38 @@ const items = [
 
 <template>
   <Sidebar>
-    <SidebarHeader>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <DropdownMenuRoot>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton>
-                Select Workspace
-                <IconChevronDown class="ml-auto" />
-              </SidebarMenuButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent class="w-[--bits-dropdown-menu-anchor-width]">
-              <DropdownMenuItem>
-                <span>Acme Inc</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <span>Acme Corp.</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenuRoot>
-        </SidebarMenuItem>
-      </SidebarMenu>
+    <SidebarHeader class="h-12 border-b">
+      <SidebarGroupLabel class="text-base text-foreground">
+        Active connection
+      </SidebarGroupLabel>
+      <DialogManageConnection />
     </SidebarHeader>
 
     <SidebarContent>
       <SidebarGroup>
-        <SidebarGroupLabel>Projects</SidebarGroupLabel>
-        <SidebarGroupAction title="Add Project">
-          <IconPlus /> <span class="sr-only">Add Project</span>
-        </SidebarGroupAction>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenuRoot>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton size="sm">
+                  selected schema
+                  <IconSelector class="ml-auto" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                class="w-[--bits-dropdown-menu-anchor-width]"
+              >
+                <DropdownMenuItem>
+                  <span>Acme Inc</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <span>Acme Corp.</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenuRoot>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <!-- <Separator class="my-2" /> -->
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
