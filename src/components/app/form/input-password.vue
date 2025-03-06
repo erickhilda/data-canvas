@@ -10,14 +10,20 @@ import { IconEye, IconEyeClosed } from "@tabler/icons-vue";
 import type { Component, HTMLAttributes } from "vue";
 import { computed, ref } from "vue";
 
-const props = defineProps<{
-  name: string;
-  label: string;
-  placeholder?: string;
-  leftSection?: Component;
-  rightSection?: Component;
-  class?: HTMLAttributes["class"];
-}>();
+const props = withDefaults(
+  defineProps<{
+    name: string;
+    label: string;
+    placeholder?: string;
+    leftSection?: Component;
+    rightSection?: Component;
+    class?: HTMLAttributes["class"];
+    disabled?: boolean;
+  }>(),
+  {
+    disabled: false,
+  },
+);
 
 const inputType = ref("password");
 const changeInputType = () => {
@@ -49,6 +55,7 @@ const rightAction = computed(() => {
           :left-section="leftSection"
           :right-section="rightSection ?? rightAction"
           @click-right-section="changeInputType"
+          :disabled="props.disabled"
         />
       </FormControl>
       <!-- <FormMessage /> -->

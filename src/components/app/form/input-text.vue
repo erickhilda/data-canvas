@@ -8,14 +8,18 @@ import {
 import Input from "@/components/ui/input/Input.vue";
 import type { Component, HTMLAttributes } from "vue";
 
-const props = defineProps<{
-  name: string;
-  label: string;
-  placeholder?: string;
-  leftSection?: Component;
-  rightSection?: Component;
-  class?: HTMLAttributes["class"];
-}>();
+const props = withDefaults(
+  defineProps<{
+    name: string;
+    label: string;
+    placeholder?: string;
+    leftSection?: Component;
+    rightSection?: Component;
+    class?: HTMLAttributes["class"];
+    disabled?: boolean;
+  }>(),
+  {},
+);
 </script>
 
 <template>
@@ -30,6 +34,7 @@ const props = defineProps<{
           v-bind="componentField"
           :left-section="leftSection"
           :right-section="rightSection"
+          :disabled="disabled"
         />
       </FormControl>
       <!-- <FormMessage /> -->

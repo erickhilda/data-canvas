@@ -1,4 +1,4 @@
-use crate::modules::database::DatabaseManager;
+use crate::modules::connection::ConnectionManager;
 use serde::Serialize;
 use sqlx::Row;
 use tauri::State;
@@ -30,7 +30,7 @@ pub struct ConnectionResponse {
 
 #[tauri::command]
 pub async fn connect_postgres(
-    state: State<'_, DatabaseManager>,
+    state: State<'_, ConnectionManager>,
     name: String,
     host: String,
     port: u16,
@@ -57,7 +57,7 @@ pub async fn connect_postgres(
 
 #[tauri::command]
 pub async fn get_schemas_postgres(
-    state: State<'_, DatabaseManager>,
+    state: State<'_, ConnectionManager>,
     name: String,
 ) -> Result<Vec<String>, String> {
     let pools = state.postgres_pools.lock().await;
@@ -75,7 +75,7 @@ pub async fn get_schemas_postgres(
 
 #[tauri::command]
 pub async fn get_tables_by_schema_postgres(
-    state: State<'_, DatabaseManager>,
+    state: State<'_, ConnectionManager>,
     name: String,
     schema: String,
 ) -> Result<Vec<String>, String> {
@@ -94,7 +94,7 @@ pub async fn get_tables_by_schema_postgres(
 
 #[tauri::command]
 pub async fn list_tables_postgres(
-    state: State<'_, DatabaseManager>,
+    state: State<'_, ConnectionManager>,
     name: String,
 ) -> Result<Vec<String>, String> {
     let pools = state.postgres_pools.lock().await;

@@ -1,4 +1,4 @@
-use crate::modules::database::DatabaseManager;
+use crate::modules::connection::ConnectionManager;
 use sqlx::Row;
 
 #[tauri::command]
@@ -12,7 +12,7 @@ pub async fn test_connection_sqlite(file_path: String) -> Result<String, String>
 
 #[tauri::command]
 pub async fn connect_sqlite(
-    state: tauri::State<'_, DatabaseManager>,
+    state: tauri::State<'_, ConnectionManager>,
     name: String,
     file_path: String,
 ) -> Result<String, String> {
@@ -28,7 +28,7 @@ pub async fn connect_sqlite(
 
 #[tauri::command]
 pub async fn list_tables_sqlite(
-    state: tauri::State<'_, DatabaseManager>,
+    state: tauri::State<'_, ConnectionManager>,
     name: String,
 ) -> Result<Vec<String>, String> {
     let pools = state.sqlite_pools.lock().await;

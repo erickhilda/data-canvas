@@ -1,11 +1,11 @@
 mod modules;
 
-use modules::database::DatabaseManager;
+use modules::connection::ConnectionManager;
 use modules::{postgres, sqlite};
 
 pub fn run() {
     tauri::Builder::default()
-        .manage(DatabaseManager::new())
+        .manage(ConnectionManager::new())
         //.plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             postgres::test_connection_postgres,
