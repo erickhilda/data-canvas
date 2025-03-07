@@ -3,7 +3,7 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { z } from "zod";
 import Button from "@/components/ui/button/Button.vue";
-import { useInvoke } from "@/composables/useInvoke";
+import { useInvoke } from "@/composables/use-invoke";
 import { useToast } from "@/components/ui/toast/use-toast";
 import InputText from "./form/input-text.vue";
 import InputPassword from "./form/input-password.vue";

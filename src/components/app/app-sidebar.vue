@@ -20,7 +20,7 @@ import {
 import DialogManageConnection from "./dialog-manage-connection.vue";
 import { useConnectionStore } from "@/stores/use-connection-store";
 import { computed, ref } from "vue";
-import { useInvoke } from "@/composables/useInvoke";
+import { useInvoke } from "@/composables/use-invoke";
 
 const connectionStore = useConnectionStore();
 
