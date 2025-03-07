@@ -30,6 +30,8 @@ const formSchema = toTypedSchema(
   }),
 );
 
+const emits = defineEmits(["successConnect"]);
+
 const {
   handleSubmit,
   validate,
@@ -51,6 +53,7 @@ const testConnection = async () => {
 
       toast({
         description: response,
+        variant: "success",
       });
     }
   } catch (error) {
@@ -65,6 +68,12 @@ const connectionStore = useConnectionStore();
 
 const { isLoading: isConnecting, invokeRPC: invokeConnectPostgres } =
   useInvoke("connect_postgres");
+const { invokeRPC: invokeGetSchemaPostgres } = useInvoke(
+  "get_schemas_postgres",
+);
+const { invokeRPC: invokeGetTablesBySchemaPostgres } = useInvoke(
+  "get_tables_by_schema_postgres",
+);
 const onSubmit = handleSubmit(async (values) => {
   try {
     await invokeConnectPostgres({
@@ -72,10 +81,22 @@ const onSubmit = handleSubmit(async (values) => {
       port: +values.port,
     });
 
-    connectionStore.setConnection(values.name ?? "", {
+    const schemas = await invokeGetSchemaPostgres<Array<string>>({
+      name: values.name,
+    });
+    const tables = await invokeGetTablesBySchemaPostgres<Array<string>>({
+      name: values.name,
+      schema: "public",
+    });
+
+    connectionStore.setActiveConnection({ ...values, type: "postgres" });
+    connectionStore.addConnection(values.name ?? "", {
       ...values,
       type: "postgres",
     });
+    connectionStore.setSchemas(schemas);
+    connectionStore.setTables(tables);
+    emits("successConnect");
   } catch (error) {
     toast({
       variant: "destructive",
