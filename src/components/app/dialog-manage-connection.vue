@@ -12,8 +12,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import FormConnectPostgres from "./form-connect-postgres.vue";
+import { useConnectionStore } from "@/stores/use-connection-store";
 
 const tags = Array.from({ length: 50 }).map(
   (_, i, a) => `v1.2.0-beta.${a.length - i}`,
@@ -40,12 +41,30 @@ const databaseTypes = {
   },
 };
 const selectedDatabaseType = ref("postgres");
+const isManageConnectionDialogOpen = ref(false);
+
+const connectionStore = useConnectionStore();
+
+// const connections = computed(() => {
+//   const connKeys = Object.keys(connectionStore.connections);
+//   const conn = [];
+//
+//   connKeys.forEach((c) => {
+//     conn.push(connectionStore.connections[c]);
+//   });
+// });
+
+const connections = computed(() => connectionStore.connections);
 </script>
 
 <template>
-  <AppDialog title="Manage connection">
+  <AppDialog
+    title="Manage connection"
+    :open="isManageConnectionDialogOpen"
+    @update:open="isManageConnectionDialogOpen = $event"
+  >
     <template #trigger>
-      <DialogTrigger as-child>
+      <DialogTrigger class="cursor-pointer" as-child>
         <SidebarGroupAction title="Add new connection">
           <IconDatabase />
           <span class="sr-only">Add new connection</span>
@@ -73,12 +92,13 @@ const selectedDatabaseType = ref("postgres");
         </DropdownMenuRoot>
 
         <ScrollArea class="min-h-[340px] h-[340px] max-h-96 w-40">
-          <div class="p-4">
-            <div v-for="tag in tags" :key="tag">
-              <div class="text-sm">
-                {{ tag }}
-              </div>
-              <Separator class="my-2" />
+          <div
+            v-for="conn in connections"
+            :key="conn.name"
+            class="hover:bg-border/50 rounded-lg w-full border border-dashed p-2 mt-2 cursor-pointer"
+          >
+            <div class="text-sm">
+              {{ conn.name }}
             </div>
           </div>
         </ScrollArea>
@@ -89,6 +109,7 @@ const selectedDatabaseType = ref("postgres");
       <div class="flex-1">
         <component
           :is="databaseTypes[selectedDatabaseType]['component']"
+          @success-connect="isManageConnectionDialogOpen = false"
         ></component>
       </div>
     </div>

@@ -2,10 +2,15 @@
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { z } from "zod";
+import Button from "@/components/ui/button/Button.vue";
+import { useInvoke } from "@/composables/useInvoke";
+import { useToast } from "@/components/ui/toast/use-toast";
 import InputText from "./form/input-text.vue";
 import InputPassword from "./form/input-password.vue";
-import { Button } from "../ui/button";
+import { useConnectionStore } from "@/stores/use-connection-store";
+import { computed } from "vue";
 
+const { toast } = useToast();
 const formSchema = toTypedSchema(
   z.object({
     name: z.string().optional(),
@@ -18,12 +23,14 @@ const formSchema = toTypedSchema(
     username: z
       .string({ required_error: "Username is required" })
       .min(1, "Username is required"),
-    password: z.string().optional(),
+    password: z.string().optional().default(""),
     databaseName: z
       .string({ required_error: "Username is required" })
       .min(1, "Username is required"),
   }),
 );
+
+const emits = defineEmits(["successConnect"]);
 
 const {
   handleSubmit,
@@ -33,29 +40,112 @@ const {
   validationSchema: formSchema,
 });
 
+const { isLoading: isTestingConnection, invokeRPC: invokeTestConnection } =
+  useInvoke("test_connection_postgres");
 const testConnection = async () => {
-  const validateRes = await validate();
-  if (validateRes.valid) {
-    console.log(validateRes);
-    return;
+  try {
+    const validateRes = await validate();
+    if (validateRes.valid) {
+      const response = await invokeTestConnection<string>({
+        ...formValues,
+        port: +(formValues?.port ?? ""),
+      });
+
+      toast({
+        description: response,
+        variant: "success",
+      });
+    }
+  } catch (error) {
+    toast({
+      variant: "destructive",
+      description: error as string,
+    });
   }
-  console.log("values", formValues);
 };
 
-const onSubmit = handleSubmit((values) => {
-  console.log("Form submitted!", values);
+const connectionStore = useConnectionStore();
+
+const { isLoading: isConnecting, invokeRPC: invokeConnectPostgres } =
+  useInvoke("connect_postgres");
+const { invokeRPC: invokeGetSchemaPostgres } = useInvoke(
+  "get_schemas_postgres",
+);
+const { invokeRPC: invokeGetTablesBySchemaPostgres } = useInvoke(
+  "get_tables_by_schema_postgres",
+);
+const onSubmit = handleSubmit(async (values) => {
+  try {
+    await invokeConnectPostgres({
+      ...values,
+      port: +values.port,
+    });
+
+    const schemas = await invokeGetSchemaPostgres<Array<string>>({
+      name: values.name,
+    });
+    const tables = await invokeGetTablesBySchemaPostgres<Array<string>>({
+      name: values.name,
+      schema: "public",
+    });
+
+    connectionStore.setActiveConnection({ ...values, type: "postgres" });
+    connectionStore.addConnection(values.name ?? "", {
+      ...values,
+      type: "postgres",
+    });
+    connectionStore.setSchemas(schemas);
+    connectionStore.setTables(tables);
+    emits("successConnect");
+  } catch (error) {
+    toast({
+      variant: "destructive",
+      description: error as string,
+    });
+  }
 });
+const isDisabled = computed(() => isConnecting || isTestingConnection);
 </script>
 
 <template>
-  <form class="grid grid-cols-12 gap-2" @submit="onSubmit">
-    <InputText class="col-span-12" name="name" label="Connection name" />
-    <InputText class="col-span-8" name="host" label="Host" />
-    <InputText class="col-span-4" name="port" label="Port" />
+  <form class="grid grid-cols-12 gap-2" @submit="onSubmit" aria-disabled="true">
+    <InputText
+      class="col-span-12"
+      name="name"
+      label="Connection name"
+      :disabled="isDisabled.value"
+    />
+    <InputText
+      class="col-span-8"
+      name="host"
+      label="Host"
+      :disabled="isDisabled.value"
+    />
+    <InputText
+      class="col-span-4"
+      name="port"
+      label="Port"
+      :disabled="isDisabled.value"
+    />
 
-    <InputText class="col-span-12" name="username" label="Username" />
-    <InputPassword class="col-span-12" name="password" label="Password" />
-    <InputText class="col-span-12" name="databaseName" label="Database name" />
+    <InputText
+      class="col-span-12"
+      name="username"
+      label="Username"
+      :disabled="isDisabled.value"
+    />
+    <InputPassword
+      class="col-span-12"
+      name="password"
+      label="Password"
+      :disabled="isDisabled.value"
+    />
+    <InputText
+      class="col-span-12"
+      name="databaseName"
+      label="Database name"
+      :disabled="isDisabled.value"
+    />
 
     <div class="col-span-12"></div>
     <div class="col-span-12 flex justify-between">
@@ -64,10 +154,19 @@ const onSubmit = handleSubmit((values) => {
         size="sm"
         variant="secondary"
         @click="testConnection"
+        :loading="isTestingConnection"
+        :disabled="isDisabled.value"
       >
         Test
       </Button>
-      <Button type="submit" size="sm"> Submit </Button>
+      <Button
+        type="submit"
+        size="sm"
+        :loading="isConnecting"
+        :disabled="isDisabled.value"
+      >
+        Submit
+      </Button>
     </div>
   </form>
 </template>

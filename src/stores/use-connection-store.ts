@@ -1,9 +1,9 @@
 import { defineStore } from "pinia";
 
-export const useDbStore = defineStore("db", {
+export const useConnectionStore = defineStore("connection", {
   state: () => ({
     activeConnection: {} as any,
-    connection: {} as Record<string, any>,
+    connections: {} as Record<string, any>,
     schemas: [] as string[],
     tables: [] as string[],
   }),
@@ -11,9 +11,9 @@ export const useDbStore = defineStore("db", {
     setActiveConnection(conn: any) {
       this.activeConnection = conn;
     },
-    setConnection(name: string, conn: any) {
-      this.connection = {
-        ...this.connection,
+    addConnection(name: string, conn: any) {
+      this.connections = {
+        ...this.connections,
         [name]: conn,
       };
     },

@@ -6,6 +6,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import AppCanvas from "@/components/app/app-canvas.vue";
+import Toaster from "@/components/ui/toast/Toaster.vue";
 </script>
 
 <template>
@@ -16,6 +17,7 @@ import AppCanvas from "@/components/app/app-canvas.vue";
         <SidebarTrigger />
       </header>
 
+      <Toaster />
       <AppCanvas />
     </SidebarInset>
   </SidebarProvider>
